@@ -1,4 +1,4 @@
-from alg_constrants_and_packages import *
+from GLOBALS import *
 import logging
 """
 logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
@@ -29,28 +29,27 @@ class ALGPlotter:
 
         self.info("ALGPlotter instance created.")
 
-    def plots_set(self, env_module):
-        if self.plot_life:
-            self.agents_list = env_module.get_agent_list()
-            self.actor_losses = {agent: deque(maxlen=100) for agent in self.agents_list}
-            self.critic_losses = {agent: deque(maxlen=100) for agent in self.agents_list}
-
-    def plots_update_data(self, data_dict):
+    def plots_update_data(self, data_dict, no_list=False):
         if self.plot_life:
             for key_name, value in data_dict.items():
-                if key_name not in self.data_to_plot:
-                    self.data_to_plot[key_name] = deque(maxlen=100)
-                self.data_to_plot[key_name].append(value)
+                if no_list:
+                    self.data_to_plot[key_name] = value
+                else:
+                    if key_name not in self.data_to_plot:
+                        self.data_to_plot[key_name] = deque(maxlen=10000)
+                    self.data_to_plot[key_name].append(value)
 
     def plots_online(self):
         # plot live:
         if self.plot_life:
-            def plot_graph(ax, indx_r, indx_c, list_of_values, label, color='b'):
-                ax[indx_r, indx_c].cla()
+            def plot_graph(ax, indx_r, indx_c, list_of_values, label, color='b', cla=True):
+                if cla:
+                    ax[indx_r, indx_c].cla()
                 ax[indx_r, indx_c].plot(list(range(len(list_of_values))), list_of_values, c=color)  # , edgecolor='b')
                 # ax[indx_r, indx_c].set_title(f'Plot: {label}')
                 ax[indx_r, indx_c].set_xlabel('iters')
                 ax[indx_r, indx_c].set_ylabel(f'{label}')
+                ax[indx_r, indx_c].axhline(0, color='gray')
 
             def plot_graph_axes(axes, list_of_values, label, color='b'):
                 axes.cla()
@@ -59,12 +58,22 @@ class ALGPlotter:
                 axes.set_xlabel('iters')
                 axes.set_ylabel(f'{label}')
 
-            counter = 0
-            for key_name, list_of_values in self.data_to_plot.items():
-                plot_graph_axes(self.fig.axes[counter], list_of_values, key_name)
-                counter += 1
+            # counter = 0
+            # for key_name, list_of_values in self.data_to_plot.items():
+            #     plot_graph_axes(self.fig.axes[counter], list_of_values, key_name)
+            #     counter += 1
 
-            # plot_graph(self.ax, 0, 1, self.val_total_rewards, 'val_rewards')
+            plot_graph(self.ax, 0, 0, self.data_to_plot['Reward'], 'Reward')
+            plot_graph(self.ax, 0, 0, self.data_to_plot['Output'], 'Output', color='red', cla=False)
+            plot_graph(self.ax, 0, 1, self.data_to_plot['critic_loss'], 'critic_loss')
+            plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
+
+            # X = self.data_to_plot['obs1']
+            # Y = self.data_to_plot['obs2']
+            # Z = self.data_to_plot['critic_values']
+            # self.ax[1, 1].cla()
+            # self.ax[1, 1] = self.fig.add_subplot(2,2,4, projection='3d')
+            # self.ax[1, 1].plot_surface(X, Y, Z, linewidth=0, antialiased=False)
 
             plt.pause(0.05)
 
@@ -96,8 +105,10 @@ class ALGPlotter:
                 self.run[k].log(f'{v}')
 
     def close(self):
-        self.run.stop()
-        plt.close()
+        if NEPTUNE:
+            self.run.stop()
+        if PLOT_LIVE:
+            plt.close()
 
     @staticmethod
     def logging_init():

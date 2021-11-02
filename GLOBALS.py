@@ -33,6 +33,8 @@ from torch.utils.data import DataLoader, Dataset
 # ------------------------------------------- #
 # ------------------FOR ENV:----------------- #
 # ------------------------------------------- #
+SINGLE_AGENT_ENV_NAME = "MountainCarContinuous-v0"
+# SINGLE_AGENT_ENV_NAME = "CartPole-v1"
 from pettingzoo.mpe import simple_spread_v2
 MAX_CYCLES = 25
 # MAX_CYCLES = 75
