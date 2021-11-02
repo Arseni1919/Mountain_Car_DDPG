@@ -95,7 +95,7 @@ class ALGPlotter:
                 self.run[k].log(v)
                 self.run[k].log(f'{v}')
 
-    def stop(self):
+    def close(self):
         self.run.stop()
         plt.close()
 
