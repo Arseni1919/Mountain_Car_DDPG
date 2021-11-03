@@ -31,16 +31,24 @@ class SingleAgentEnv:
         return observation
 
     def step(self, action):
+        action = self.prepare_action(action)
+        observation, reward, done, info = self.env.step(action)
+        observation = Variable(torch.tensor(observation, requires_grad=True).float().unsqueeze(0))
+        reward = Variable(torch.tensor(reward).float().unsqueeze(0))
+        return observation, reward, done, info
+
+    def prepare_action(self, action):
         action = action.detach().squeeze().numpy()
         if self.env_name == "CartPole-v1":
             action = 1 if action > 0.5 else 0
             print(action)
-        if self.env_name == "MountainCarContinuous-v0":
+        elif self.env_name == "MountainCarContinuous-v0":
             action = [action]
-        observation, reward, done, info = self.env.step(action)
-        observation = Variable(torch.tensor(observation, requires_grad=True).float().unsqueeze(0))
-        reward = Variable(torch.tensor(reward, requires_grad=True).float().unsqueeze(0))
-        return observation, reward, done, info
+        elif self.env_name == "LunarLanderContinuous-v2":
+            action = action
+        else:
+            plotter.error('action!')
+        return action
 
     def close(self):
         self.env.close()

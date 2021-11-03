@@ -14,6 +14,14 @@ critic = CriticNet(obs_size=env.observation_size(), n_actions=env.action_size(),
 critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
 actor = ActorNet(obs_size=env.observation_size(), n_actions=env.action_size())
 actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
+
+for i in range(100):
+    sample = env.sample_observation()
+    action = actor(sample)
+    print(f'({action.detach().numpy()}), ', end='')
+
+print()
+# raise RuntimeError()
 rewards = 0
 for i in range(100000):
     env.render()
@@ -26,9 +34,13 @@ for i in range(100000):
             actor_loss = - critic(observation_i, action)
             actor_loss.backward()
             actor_optim.step()
+
+            # observation_i = observation.detach()
+            # action = actor(observation_i)
         else:
             observation_i = observation.detach()
             action = actor(observation_i)
+            actor_loss = torch.tensor(0)
     else:
         action = env.sample_action()
         actor_loss = torch.tensor(0)
@@ -37,19 +49,21 @@ for i in range(100000):
     new_observation, reward, done, info = env.step(action)
     rewards += reward.item()
     # -------------------------- # CRITIC # -------------------------- #
+    critic_optim.zero_grad()
+    output_value = critic(observation, action.detach())
     if i % 100 == 0:
-        critic_optim.zero_grad()
-        output_value = critic(observation, action.detach())
-        loss = nn.MSELoss()
         with torch.no_grad():
             next_action = actor(new_observation)
-            next_critic_value = critic(new_observation, next_action)
+            next_critic_value = critic(new_observation, next_action) if not done else 0
             # next_critic_value = 0
-            target = reward + GAMMA * (next_critic_value) if not done else reward
-            target += torch.abs(new_observation[0][1])
-        critic_loss = loss(output_value, target)
+            target = reward + GAMMA * next_critic_value
+            curr_critic_value = critic(observation, action.detach())
+            delta = target - curr_critic_value
+        critic_loss = delta * output_value
         critic_loss.backward()
         critic_optim.step()
+    else:
+        critic_loss = torch.tensor(0)
     # ---------------------------------------------------------------- #
     # obs1 = np.linspace(-1.2, 0.6, 20)
     # obs2 = np.linspace(-0.07, 0.07, 20)
@@ -66,7 +80,7 @@ for i in range(100000):
         'critic value': output_value.item(),
         'critic_loss': critic_loss.item(),
         'actor_loss': actor_loss.item(),
-        'action': action.item()
+        # 'action': action.item()
     })
     # plotter.plots_update_data({
     #     'obs1': obs1,

@@ -33,8 +33,9 @@ from torch.utils.data import DataLoader, Dataset
 # ------------------------------------------- #
 # ------------------FOR ENV:----------------- #
 # ------------------------------------------- #
-SINGLE_AGENT_ENV_NAME = "MountainCarContinuous-v0"
+# SINGLE_AGENT_ENV_NAME = "MountainCarContinuous-v0"
 # SINGLE_AGENT_ENV_NAME = "CartPole-v1"
+SINGLE_AGENT_ENV_NAME = 'LunarLanderContinuous-v2'
 from pettingzoo.mpe import simple_spread_v2
 MAX_CYCLES = 25
 # MAX_CYCLES = 75
@@ -66,8 +67,8 @@ RENDER_WHILE_TRAINING = False
 M_EPISODES = 1000
 BATCH_SIZE = 64  # size of the batches
 REPLAY_BUFFER_SIZE = BATCH_SIZE * 1000
-LR_CRITIC = 1e-2  # learning rate
-LR_ACTOR = 1e-2  # learning rate
+LR_CRITIC = 1e-3  # learning rate
+LR_ACTOR = 1e-10  # learning rate
 GAMMA = 0.95  # discount factor
 EPSILON = 0.00
 ACT_NOISE = 0.5  # actuator noise
