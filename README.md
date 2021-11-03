@@ -1,8 +1,8 @@
 # DDPG implementation For Mountain Car
 
-## The Algorithm
+## Proof Of Policy Gradient Theorem
 
-### Pseudocode
+![pg](static/pg.png)
 
 
 ### Parameters:
