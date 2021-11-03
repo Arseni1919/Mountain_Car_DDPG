@@ -36,7 +36,7 @@ class ALGPlotter:
                     self.data_to_plot[key_name] = value
                 else:
                     if key_name not in self.data_to_plot:
-                        self.data_to_plot[key_name] = deque(maxlen=10000)
+                        self.data_to_plot[key_name] = deque(maxlen=1000)
                     self.data_to_plot[key_name].append(value)
 
     def plots_online(self):
@@ -47,7 +47,7 @@ class ALGPlotter:
                     ax[indx_r, indx_c].cla()
                 ax[indx_r, indx_c].plot(list(range(len(list_of_values))), list_of_values, c=color)  # , edgecolor='b')
                 # ax[indx_r, indx_c].set_title(f'Plot: {label}')
-                ax[indx_r, indx_c].set_xlabel('iters')
+                # ax[indx_r, indx_c].set_xlabel('iters')
                 ax[indx_r, indx_c].set_ylabel(f'{label}')
                 ax[indx_r, indx_c].axhline(0, color='gray')
 
@@ -55,7 +55,7 @@ class ALGPlotter:
                 axes.cla()
                 axes.plot(list(range(len(list_of_values))), list_of_values, c=color)  # , edgecolor='b')
                 # axes.set_title(f'Plot: {label}')
-                axes.set_xlabel('iters')
+                # axes.set_xlabel('iters')
                 axes.set_ylabel(f'{label}')
 
             # counter = 0
@@ -64,9 +64,10 @@ class ALGPlotter:
             #     counter += 1
 
             plot_graph(self.ax, 0, 0, self.data_to_plot['Reward'], 'Reward')
-            plot_graph(self.ax, 0, 0, self.data_to_plot['Output'], 'Output', color='red', cla=False)
+            plot_graph(self.ax, 0, 0, self.data_to_plot['critic value'], 'critic value', color='red', cla=False)
             plot_graph(self.ax, 0, 1, self.data_to_plot['critic_loss'], 'critic_loss')
             plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
+            plot_graph(self.ax, 1, 1, self.data_to_plot['action'], 'action')
 
             # X = self.data_to_plot['obs1']
             # Y = self.data_to_plot['obs2']

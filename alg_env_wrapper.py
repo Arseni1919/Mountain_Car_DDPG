@@ -1,3 +1,5 @@
+import gym.spaces
+
 from GLOBALS import *
 
 from alg_plotter import plotter
@@ -5,6 +7,7 @@ from alg_plotter import plotter
 
 class SingleAgentEnv:
     def __init__(self, env_name):
+        self.env_name = env_name
         self.env = gym.make(env_name)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -28,14 +31,34 @@ class SingleAgentEnv:
         return observation
 
     def step(self, action):
-        action = action.item()
-        observation, reward, done, info = self.env.step([action])
+        action = action.detach().squeeze().numpy()
+        if self.env_name == "CartPole-v1":
+            action = 1 if action > 0.5 else 0
+            print(action)
+        if self.env_name == "MountainCarContinuous-v0":
+            action = [action]
+        observation, reward, done, info = self.env.step(action)
         observation = Variable(torch.tensor(observation, requires_grad=True).float().unsqueeze(0))
         reward = Variable(torch.tensor(reward, requires_grad=True).float().unsqueeze(0))
         return observation, reward, done, info
 
     def close(self):
         self.env.close()
+
+    def observation_size(self):
+        if isinstance(self.env.observation_space, gym.spaces.Discrete):
+            return self.env.observation_space.n
+        if isinstance(self.env.observation_space, gym.spaces.Box):
+            return self.env.observation_space.shape[0]
+        return None
+
+    def action_size(self):
+        if isinstance(self.env.action_space, gym.spaces.Discrete):
+            # self.env.action_space.n
+            return 1
+        if isinstance(self.env.action_space, gym.spaces.Box):
+            return self.env.action_space.shape[0]
+        return None
 
 
 class MultiAgentEnv:

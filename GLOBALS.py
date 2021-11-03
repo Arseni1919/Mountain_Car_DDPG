@@ -69,6 +69,7 @@ REPLAY_BUFFER_SIZE = BATCH_SIZE * 1000
 LR_CRITIC = 1e-2  # learning rate
 LR_ACTOR = 1e-2  # learning rate
 GAMMA = 0.95  # discount factor
+EPSILON = 0.00
 ACT_NOISE = 0.5  # actuator noise
 POLYAK = 0.99
 VAL_EVERY = 2000
