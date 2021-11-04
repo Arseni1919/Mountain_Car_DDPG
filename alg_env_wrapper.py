@@ -46,6 +46,8 @@ class SingleAgentEnv:
             action = [action]
         elif self.env_name == "LunarLanderContinuous-v2":
             action = action
+        elif self.env_name == "BipedalWalker-v3":
+            action = action
         else:
             plotter.error('action!')
         return action
