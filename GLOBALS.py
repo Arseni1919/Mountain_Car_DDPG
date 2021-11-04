@@ -6,6 +6,7 @@ import time
 import logging
 from collections import namedtuple, deque
 from termcolor import colored
+import random
 
 import gym
 import pettingzoo
@@ -64,7 +65,7 @@ RENDER_WHILE_TRAINING = False
 # REWARD_STEPS = 4
 # CLIP_GRAD = 0.1
 
-M_EPISODES = 1000
+N_STEPS = 10000
 BATCH_SIZE = 64  # size of the batches
 REPLAY_BUFFER_SIZE = BATCH_SIZE * 1000
 LR_CRITIC = 1e-3  # learning rate
