@@ -62,14 +62,16 @@ class ALGPlotter:
             # for key_name, list_of_values in self.data_to_plot.items():
             #     plot_graph_axes(self.fig.axes[counter], list_of_values, key_name)
             #     counter += 1
-            if 'Reward' in self.data_to_plot:
-                plot_graph(self.ax, 0, 0, self.data_to_plot['Reward'], 'Reward')
+            if 'reward' in self.data_to_plot:
+                plot_graph(self.ax, 0, 0, self.data_to_plot['reward'], 'Reward')
             if 'critic value' in self.data_to_plot:
                 plot_graph(self.ax, 0, 0, self.data_to_plot['critic value'], 'critic value', color='red', cla=False)
             if 'critic_loss' in self.data_to_plot:
                 plot_graph(self.ax, 0, 1, self.data_to_plot['critic_loss'], 'critic_loss')
             if 'actor_loss' in self.data_to_plot:
                 plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
+            if 'rewards' in self.data_to_plot:
+                plot_graph(self.ax, 1, 1, self.data_to_plot['rewards'], 'Rewards')
             if 'action' in self.data_to_plot:
                 plot_graph(self.ax, 1, 1, self.data_to_plot['action'], 'action')
 

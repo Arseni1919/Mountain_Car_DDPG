@@ -26,10 +26,6 @@ from torch.distributions import Normal
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader, Dataset
 
-# import pytorch_lightning as pl
-# from pytorch_lightning.callbacks import Callback
-# from pytorch_lightning import loggers as pl_loggers
-
 
 # ------------------------------------------- #
 # ------------------FOR ENV:----------------- #
@@ -68,13 +64,14 @@ RENDER_WHILE_TRAINING = False
 
 N_STEPS = 10000
 BATCH_SIZE = 64  # size of the batches
-REPLAY_BUFFER_SIZE = BATCH_SIZE * 1000
+REPLAY_BUFFER_SIZE = BATCH_SIZE * 10
 LR_CRITIC = 1e-3  # learning rate
-LR_ACTOR = 1e-10  # learning rate
-GAMMA = 0.95  # discount factor
+LR_ACTOR = 1e-4  # learning rate
+GAMMA = 0.99  # discount factor
 EPSILON = 0.00
+SIGMA = 0.5
 ACT_NOISE = 0.5  # actuator noise
-POLYAK = 0.99
+POLYAK = 0.999
 VAL_EVERY = 2000
 TRAIN_EVERY = 100
 HIDDEN_SIZE = 256

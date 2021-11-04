@@ -1,4 +1,5 @@
 import gym.spaces
+import torch
 
 from GLOBALS import *
 
@@ -35,6 +36,7 @@ class SingleAgentEnv:
         observation, reward, done, info = self.env.step(action)
         observation = Variable(torch.tensor(observation, requires_grad=True).float().unsqueeze(0))
         reward = Variable(torch.tensor(reward).float().unsqueeze(0))
+        done = torch.tensor(done)
         return observation, reward, done, info
 
     def prepare_action(self, action):
