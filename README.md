@@ -4,6 +4,9 @@
 
 ![pg](static/pg.png)
 
+## DDPG
+
+![ddpg](static/pseudo1.png)
 
 ### Parameters:
 ```
