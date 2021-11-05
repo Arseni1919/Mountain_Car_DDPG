@@ -43,7 +43,7 @@ class SingleAgentEnv:
         action = action.detach().squeeze().numpy()
         if self.env_name == "CartPole-v1":
             action = 1 if action > 0.5 else 0
-            print(action)
+            # print(action)
         elif self.env_name == "MountainCarContinuous-v0":
             action = [action]
         elif self.env_name == "LunarLanderContinuous-v2":

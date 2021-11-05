@@ -1,4 +1,5 @@
 from GLOBALS import *
+from alg_functions import *
 import logging
 """
 logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.DEBUG)
@@ -36,7 +37,7 @@ class ALGPlotter:
                     self.data_to_plot[key_name] = value
                 else:
                     if key_name not in self.data_to_plot:
-                        self.data_to_plot[key_name] = deque(maxlen=1000)
+                        self.data_to_plot[key_name] = deque(maxlen=50000)
                     self.data_to_plot[key_name].append(value)
 
     def plots_online(self):
@@ -66,10 +67,17 @@ class ALGPlotter:
                 plot_graph(self.ax, 0, 0, self.data_to_plot['reward'], 'Reward')
             if 'critic value' in self.data_to_plot:
                 plot_graph(self.ax, 0, 0, self.data_to_plot['critic value'], 'critic value', color='red', cla=False)
+            if 'current_sigma' in self.data_to_plot:
+                plot_graph(self.ax, 0, 0, self.data_to_plot['current_sigma'], 'current_sigma')
             if 'critic_loss' in self.data_to_plot:
-                plot_graph(self.ax, 0, 1, self.data_to_plot['critic_loss'], 'critic_loss')
+                steps = len(self.data_to_plot['critic_loss'])
+                list_to_show = moving_average(self.data_to_plot['critic_loss'], steps/100)
+                plot_graph(self.ax, 0, 1, list_to_show, 'critic_loss')
             if 'actor_loss' in self.data_to_plot:
-                plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
+                steps = len(self.data_to_plot['actor_loss'])
+                list_to_show = moving_average(self.data_to_plot['actor_loss'], steps / 100)
+                plot_graph(self.ax, 1, 0, list_to_show, 'actor_loss')
+                # plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
             if 'rewards' in self.data_to_plot:
                 plot_graph(self.ax, 1, 1, self.data_to_plot['rewards'], 'Rewards')
             if 'action' in self.data_to_plot:

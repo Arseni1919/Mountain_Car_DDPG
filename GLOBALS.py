@@ -32,8 +32,8 @@ from torch.utils.data import DataLoader, Dataset
 # ------------------------------------------- #
 # SINGLE_AGENT_ENV_NAME = "MountainCarContinuous-v0"
 # SINGLE_AGENT_ENV_NAME = "CartPole-v1"
-# SINGLE_AGENT_ENV_NAME = 'LunarLanderContinuous-v2'
-SINGLE_AGENT_ENV_NAME = "BipedalWalker-v3"
+SINGLE_AGENT_ENV_NAME = 'LunarLanderContinuous-v2'
+# SINGLE_AGENT_ENV_NAME = "BipedalWalker-v3"
 from pettingzoo.mpe import simple_spread_v2
 MAX_CYCLES = 25
 # MAX_CYCLES = 75
@@ -45,7 +45,7 @@ ENV = simple_spread_v2.parallel_env(N=NUMBER_OF_AGENTS, local_ratio=0.5, max_cyc
 NUMBER_OF_GAMES = 10
 SAVE_RESULTS = True
 # SAVE_RESULTS = False
-SAVE_PATH = 'data/actor_net.pt'
+SAVE_PATH = 'data'
 
 # NEPTUNE = True
 NEPTUNE = False
@@ -62,16 +62,15 @@ RENDER_WHILE_TRAINING = False
 # REWARD_STEPS = 4
 # CLIP_GRAD = 0.1
 
-N_STEPS = 10000
 BATCH_SIZE = 64  # size of the batches
-REPLAY_BUFFER_SIZE = BATCH_SIZE * 10
+REPLAY_BUFFER_SIZE = BATCH_SIZE * 500
+N_STEPS = REPLAY_BUFFER_SIZE + 14000
 LR_CRITIC = 1e-3  # learning rate
-LR_ACTOR = 1e-4  # learning rate
+LR_ACTOR = 1e-3  # learning rate
 GAMMA = 0.99  # discount factor
 EPSILON = 0.00
-SIGMA = 0.5
-ACT_NOISE = 0.5  # actuator noise
-POLYAK = 0.999
+SIGMA = 0.4
+POLYAK = 0.99
 VAL_EVERY = 2000
 TRAIN_EVERY = 100
 HIDDEN_SIZE = 256

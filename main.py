@@ -3,7 +3,10 @@ import torch
 from alg_plotter import plotter
 from alg_env_wrapper import env
 from alg_nets import *
-from alf_replay_buffer import ReplayBuffer
+from alg_replay_buffer import ReplayBuffer
+from play import play
+
+
 torch.autograd.set_detect_anomaly(True)
 # --------------------------- # NETS # -------------------------- #
 critic = CriticNet(obs_size=env.observation_size(), n_actions=env.action_size(), n_agents=1)
@@ -29,11 +32,13 @@ observation = env.reset()
 rewards = 0
 episode = 0
 for step in range(N_STEPS):
+    print(f'\r(step {step - REPLAY_BUFFER_SIZE})', end='')
     # --------------------------- # STEP # -------------------------- #
     # action = env.sample_action()  # your agent here (this takes random actions)
-    noisy_action = actor(observation) + torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
-    clipped_action = torch.clamp(noisy_action, min=-1, max=1)
-    new_observation, reward, done, info = env.step(clipped_action)
+    with torch.no_grad():
+        noisy_action = actor(observation) + torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
+        clipped_action = torch.clamp(noisy_action, min=-1, max=1)
+        new_observation, reward, done, info = env.step(clipped_action)
 
     # --------------------------- # STORE # -------------------------- #
     replay_buffer.append((observation, clipped_action, reward, done, new_observation))
@@ -43,20 +48,25 @@ for step in range(N_STEPS):
     observation = new_observation
     if done:
         observation = env.reset()
-        print(f'Done! rewards: {rewards}')
         plotter.plots_update_data({'rewards': rewards})
+        if step > REPLAY_BUFFER_SIZE:
+            plotter.debug(f'episode: {episode}')
+            plotter.debug(f'Done! rewards: {rewards}')
+        episode += 1
         rewards = 0
 
     if step > REPLAY_BUFFER_SIZE:
-        env.render()
-        print(f'step: {step}')
+        current_sigma = current_sigma - (SIGMA/(N_STEPS - len(replay_buffer)))
+        if episode % 5 == 0:
+            env.render()
+        # print(f'step: {step}')
         # --------------------------- # MINIBATCH # -------------------------- #
         minibatch = replay_buffer.sample(n=BATCH_SIZE)
 
         # --------------------------- # Y # -------------------------- #
         b_observations, b_actions, b_rewards, b_dones, b_next_observations = zip(*minibatch)
         b_observations = torch.stack(b_observations).squeeze()
-        b_actions = torch.stack(b_actions).squeeze()
+        b_actions = torch.stack(b_actions).squeeze(1)
         b_rewards = torch.stack(b_rewards).squeeze()
         b_dones = torch.stack(b_dones).squeeze()
         b_next_observations = torch.stack(b_next_observations).squeeze()
@@ -75,7 +85,7 @@ for step in range(N_STEPS):
 
         # --------------------------- # UPDATE ACTOR # -------------------------- #
         actor_optim.zero_grad()
-        actor_loss = critic(b_observations, actor(b_observations)).mean()
+        actor_loss = - critic(b_observations, actor(b_observations)).mean()
         actor_loss.backward()
         actor_optim.step()
 
@@ -88,17 +98,30 @@ for step in range(N_STEPS):
 
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.plots_update_data({
-            'reward': reward.item(),
+            # 'reward': reward.item(),
             'critic_loss': critic_loss.item(),
             'actor_loss': actor_loss.item(),
-            # 'action': action.item()
+            # 'action': clipped_action.item(),
+            'current_sigma': current_sigma,
         })
 
-        if step % 100 == 0:
+        if step % 1000 == 0:
             plotter.plots_online()
 
         # ---------------------------------------------------------------- #
 
 plotter.close()
 env.close()
+plotter.info('Finished train.')
+
+# Save Results
+if SAVE_RESULTS:
+    plotter.info('Saving results...')
+    torch.save(actor, f'{SAVE_PATH}/actor.pt')
+    torch.save(target_actor, f'{SAVE_PATH}/target_actor.pt')
+    # example runs
+    plotter.info('Example run...')
+    model = torch.load(f'{SAVE_PATH}/target_actor.pt')
+    model.eval()
+    play(10, model=model)
 
