@@ -45,6 +45,7 @@
 - [PyTorch | DATASETS & DATALOADERS](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html)
 - [PyTorch | SAVING AND LOADING MODELS](https://pytorch.org/tutorials/beginner/saving_loading_models.html)
 - [GitHub | zzzxxxttt / pytorch_simple_RL](https://github.com/zzzxxxttt/pytorch_simple_RL)
+- [A Gentle Introduction to Cross-Entropy for Machine Learning](https://machinelearningmastery.com/cross-entropy-for-machine-learning/)
 
 ## Papers:
 

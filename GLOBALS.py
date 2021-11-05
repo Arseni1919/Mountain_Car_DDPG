@@ -7,7 +7,7 @@ import logging
 from collections import namedtuple, deque
 from termcolor import colored
 import random
-
+from math import log
 import gym
 import pettingzoo
 import numpy as np
