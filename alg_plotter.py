@@ -40,6 +40,23 @@ class ALGPlotter:
                         self.data_to_plot[key_name] = deque(maxlen=50000)
                     self.data_to_plot[key_name].append(value)
 
+    def plots_update_entropy(self, net1, net2, name=''):
+        if self.plot_life:
+            key_name = f'kl_div_{name}'
+            if key_name not in self.data_to_plot:
+                self.data_to_plot[key_name] = deque(maxlen=50000)
+
+            kl_div = 0
+            list_params_net1 = list(net1.parameters())
+            list_params_net2 = list(net2.parameters())
+            for p1, p2 in zip(list_params_net1, list_params_net2):
+                for i in range(len(p1)):
+                    a, b = p1[i].softmax(dim=0).detach().numpy(), p2[i].softmax(dim=0).detach().numpy()
+                    kl_div += kl_divergence(a, b)
+
+            self.data_to_plot[key_name].append(kl_div)
+
+
     def plots_online(self):
         # plot live:
         if self.plot_life:
@@ -71,7 +88,7 @@ class ALGPlotter:
                 plot_graph(self.ax, 0, 0, self.data_to_plot['current_sigma'], 'current_sigma')
             if 'critic_loss' in self.data_to_plot:
                 steps = len(self.data_to_plot['critic_loss'])
-                list_to_show = moving_average(self.data_to_plot['critic_loss'], steps/100)
+                list_to_show = moving_average(self.data_to_plot['critic_loss'], steps / 100)
                 plot_graph(self.ax, 0, 1, list_to_show, 'critic_loss')
             if 'actor_loss' in self.data_to_plot:
                 steps = len(self.data_to_plot['actor_loss'])
@@ -82,6 +99,10 @@ class ALGPlotter:
                 plot_graph(self.ax, 1, 1, self.data_to_plot['rewards'], 'Rewards')
             if 'action' in self.data_to_plot:
                 plot_graph(self.ax, 1, 1, self.data_to_plot['action'], 'action')
+            if 'kl_div_actor' in self.data_to_plot:
+                plot_graph(self.ax, 1, 1, self.data_to_plot['kl_div_actor'], 'kl_div_actor')
+            if 'kl_div_critic' in self.data_to_plot:
+                plot_graph(self.ax, 1, 1, self.data_to_plot['kl_div_critic'], 'kl_div_critic', color='red', cla=False)
 
             # X = self.data_to_plot['obs1']
             # Y = self.data_to_plot['obs2']

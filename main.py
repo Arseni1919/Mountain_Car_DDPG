@@ -55,8 +55,8 @@ for step in range(N_STEPS):
         episode += 1
         rewards = 0
 
-    if step > REPLAY_BUFFER_SIZE:
-        current_sigma = current_sigma - (SIGMA/(N_STEPS - len(replay_buffer)))
+    if step > REPLAY_BUFFER_SIZE and step % 100 == 0:
+        current_sigma = SIGMA - (step - len(replay_buffer))*(SIGMA/(N_STEPS - len(replay_buffer)))
         if episode % 5 == 0:
             env.render()
         # print(f'step: {step}')
@@ -92,9 +92,11 @@ for step in range(N_STEPS):
         # --------------------------- # UPDATE TARGET NETS # -------------------------- #
         for target_param, param in zip(target_critic.parameters(), critic.parameters()):
             target_param.data.copy_(POLYAK * target_param.data + (1.0 - POLYAK) * param.data)
+        # plotter.plots_update_entropy(critic, target_critic, 'critic')
 
         for target_param, param in zip(target_actor.parameters(), actor.parameters()):
             target_param.data.copy_(POLYAK * target_param.data + (1.0 - POLYAK) * param.data)
+        # plotter.plots_update_entropy(actor, target_actor, 'actor')
 
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.plots_update_data({
@@ -105,7 +107,7 @@ for step in range(N_STEPS):
             'current_sigma': current_sigma,
         })
 
-        if step % 1000 == 0:
+        if step % 10 == 0:
             plotter.plots_online()
 
         # ---------------------------------------------------------------- #

@@ -3,7 +3,9 @@ from GLOBALS import *
 
 def moving_average(x, w):
     w = int(w)
-    return np.convolve(x, np.ones(w), 'valid') / w
+    if w > 0:
+        return np.convolve(x, np.ones(w), 'valid') / w
+    return [0]
 
 """
 # H(P, Q) = H(P) + KL(P || Q)
@@ -25,4 +27,6 @@ def cross_entropy(p, q):
 
 # calculate the kl divergence KL(P || Q)
 def kl_divergence(p, q):
-    return sum(p[i] * log(p[i]/q[i]) for i in range(len(p)))
+    if len(p.shape) and len(q.shape):
+        return sum(p[i] * log(p[i]/q[i]) for i in range(len(p)))
+    return 0
