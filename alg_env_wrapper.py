@@ -3,12 +3,13 @@ import torch
 
 from GLOBALS import *
 
-from alg_plotter import plotter
+# from alg_plotter import plotter
 
 
 class SingleAgentEnv:
-    def __init__(self, env_name):
+    def __init__(self, env_name, plotter=None):
         self.env_name = env_name
+        self.plotter = plotter
         self.env = gym.make(env_name)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -51,7 +52,8 @@ class SingleAgentEnv:
         elif self.env_name == "BipedalWalker-v3":
             action = action
         else:
-            plotter.error('action!')
+            if self.plotter:
+                self.plotter.error('action!')
         return action
 
     def close(self):
@@ -78,4 +80,4 @@ class MultiAgentEnv:
         pass
 
 
-env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME)
+# env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME)

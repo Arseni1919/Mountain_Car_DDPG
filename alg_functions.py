@@ -30,3 +30,13 @@ def kl_divergence(p, q):
     if len(p.shape) and len(q.shape):
         return sum(p[i] * log(p[i]/q[i]) for i in range(len(p)))
     return 0
+
+
+def soft_update(target, source, tau, plotter=None):
+    # for target_param, param in zip(target_critic.parameters(), critic.parameters()):
+    #     target_param.data.copy_(POLYAK * target_param.data + (1.0 - POLYAK) * param.data)
+    for target_param, param in zip(target.parameters(), source.parameters()):
+        target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+    if plotter:
+        # plotter.plots_update_entropy(source, target, 'critic')
+        pass

@@ -14,10 +14,11 @@ class ALGPlotter:
     """
     This object is responsible for plotting, logging and neptune updating.
     """
-    def __init__(self, plot_life=True, plot_neptune=False):
+    def __init__(self, plot_life=True, plot_neptune=False, name=''):
 
         self.plot_life = plot_life
         self.plot_neptune = plot_neptune
+        self.name = name
         self.fig, self.actor_losses, self.critic_losses, self.ax, self.agents_list = {}, {}, {}, {}, {}
         self.total_reward, self.val_total_rewards = [], []
 
@@ -118,9 +119,10 @@ class ALGPlotter:
 
     def neptune_init(self):
         if self.plot_neptune:
-            self.run = neptune.init(project='1919ars/PettingZoo',
-                                    tags=['DDPG'],
-                                    name=f'DDPG_{time.asctime()}',
+            self.run = neptune.init(project='1919ars/MountainCarDDPG',
+                                    api_token=os.environ['NEPTUNE_API_TOKEN'],
+                                    tags=['mountainCar'],
+                                    name=f'{self.name}_mountainCar',
                                     # source_files=['alg_constrants_amd_packages.py'],
                                     )
             # Neptune.ai Logger
@@ -138,7 +140,7 @@ class ALGPlotter:
         if self.plot_neptune:
             for k, v in update_dict.items():
                 self.run[k].log(v)
-                self.run[k].log(f'{v}')
+                # self.run[k].log(f'{v}')
 
     def close(self):
         if NEPTUNE:
@@ -172,7 +174,8 @@ class ALGPlotter:
         raise RuntimeError(f"~[ERROR]: {message}")
 
 
-plotter = ALGPlotter(
-    plot_life=PLOT_LIVE,
-    plot_neptune=NEPTUNE
-)
+# plotter = ALGPlotter(
+#     plot_life=PLOT_LIVE,
+#     plot_neptune=NEPTUNE,
+#     name='my_run'
+# )

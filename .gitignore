@@ -8,3 +8,5 @@ env
 lightning_logs
 .ckpt
 example.ckpt
+.env
+.neptune

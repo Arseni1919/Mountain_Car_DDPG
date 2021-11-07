@@ -1,8 +1,8 @@
 from GLOBALS import *
-from alg_env_wrapper import env
+from alg_env_wrapper import SingleAgentEnv
 
 
-def play(times: int = 1, model: nn.Module = None):
+def play(env, times: int = 1, model: nn.Module = None):
     state = env.reset()
     game = 0
     total_reward = 0
@@ -29,4 +29,5 @@ if __name__ == '__main__':
     # torch.save(target_actor, f'{SAVE_PATH}/target_actor.pt')
     actor_model = torch.load(f'{SAVE_PATH}/actor.pt')
     actor_model.eval()
-    play(10, actor_model)
+    curr_env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME)
+    play(curr_env, 10, actor_model)

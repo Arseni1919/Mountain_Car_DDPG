@@ -16,6 +16,7 @@ import plotly
 import plotly.express as px
 import neptune.new as neptune
 from neptune.new.types import File
+from dotenv import load_dotenv
 
 import torch
 from torch import nn
@@ -25,7 +26,7 @@ from torch.autograd import Variable
 from torch.distributions import Normal
 from torch.utils.data import random_split
 from torch.utils.data import DataLoader, Dataset
-
+load_dotenv()
 
 # ------------------------------------------- #
 # ------------------FOR ENV:----------------- #
@@ -47,8 +48,8 @@ SAVE_RESULTS = True
 # SAVE_RESULTS = False
 SAVE_PATH = 'data'
 
-# NEPTUNE = True
-NEPTUNE = False
+NEPTUNE = True
+# NEPTUNE = False
 PLOT_LIVE = True
 # PLOT_LIVE = False
 RENDER_WHILE_TRAINING = False
@@ -71,6 +72,7 @@ GAMMA = 0.99  # discount factor
 EPSILON = 0.00
 SIGMA = 0.4
 POLYAK = 0.99
+TAU = 0.01
 VAL_EVERY = 2000
 TRAIN_EVERY = 100
 HIDDEN_SIZE = 256

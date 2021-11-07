@@ -1,11 +1,14 @@
 import torch
 
-from alg_plotter import plotter
-from alg_env_wrapper import env
+from alg_plotter import ALGPlotter
+from alg_env_wrapper import SingleAgentEnv
 from alg_nets import *
 from alg_replay_buffer import ReplayBuffer
 from play import play
+from alg_functions import *
 
+plotter = ALGPlotter(plot_life=PLOT_LIVE, plot_neptune=NEPTUNE, name='my_run')
+env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME, plotter=plotter)
 
 torch.autograd.set_detect_anomaly(True)
 # --------------------------- # NETS # -------------------------- #
@@ -38,6 +41,7 @@ for step in range(N_STEPS):
     with torch.no_grad():
         noisy_action = actor(observation) + torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
         clipped_action = torch.clamp(noisy_action, min=-1, max=1)
+        plotter.neptune_update({'action': clipped_action.item()})
         new_observation, reward, done, info = env.step(clipped_action)
 
     # --------------------------- # STORE # -------------------------- #
@@ -52,6 +56,8 @@ for step in range(N_STEPS):
         if step > REPLAY_BUFFER_SIZE:
             plotter.debug(f'episode: {episode}')
             plotter.debug(f'Done! rewards: {rewards}')
+            plotter.plots_update_data({'rewards': rewards})
+            plotter.neptune_update({'rewards': rewards})
         episode += 1
         rewards = 0
 
@@ -90,22 +96,11 @@ for step in range(N_STEPS):
         actor_optim.step()
 
         # --------------------------- # UPDATE TARGET NETS # -------------------------- #
-        for target_param, param in zip(target_critic.parameters(), critic.parameters()):
-            target_param.data.copy_(POLYAK * target_param.data + (1.0 - POLYAK) * param.data)
-        # plotter.plots_update_entropy(critic, target_critic, 'critic')
-
-        for target_param, param in zip(target_actor.parameters(), actor.parameters()):
-            target_param.data.copy_(POLYAK * target_param.data + (1.0 - POLYAK) * param.data)
-        # plotter.plots_update_entropy(actor, target_actor, 'actor')
+        soft_update(target_critic, critic, TAU)
+        soft_update(target_actor, actor, TAU)
 
         # --------------------------- # PLOTTER # -------------------------- #
-        plotter.plots_update_data({
-            # 'reward': reward.item(),
-            'critic_loss': critic_loss.item(),
-            'actor_loss': actor_loss.item(),
-            # 'action': clipped_action.item(),
-            'current_sigma': current_sigma,
-        })
+        plotter.neptune_update({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
 
         if step % 10 == 0:
             plotter.plots_online()
