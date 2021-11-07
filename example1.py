@@ -14,7 +14,7 @@ from drawnow import drawnow
 import matplotlib.pyplot as plt
 
 from alg_plotter import ALGPlotter
-plotter = ALGPlotter(plot_life=False, plot_neptune=True, name='example_run')
+plotter = ALGPlotter(plot_life=False, plot_neptune=True, name='example_run', tags=['MountainCarContinuous-v0'])
 
 last_score_plot = [0]
 avg_score_plot = [0]

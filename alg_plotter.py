@@ -14,11 +14,15 @@ class ALGPlotter:
     """
     This object is responsible for plotting, logging and neptune updating.
     """
-    def __init__(self, plot_life=True, plot_neptune=False, name=''):
+    def __init__(self, plot_life=True, plot_neptune=False, name='', tags=None):
 
+        if tags is None:
+            tags = []
         self.plot_life = plot_life
         self.plot_neptune = plot_neptune
+        self.run = {}
         self.name = name
+        self.tags = tags
         self.fig, self.actor_losses, self.critic_losses, self.ax, self.agents_list = {}, {}, {}, {}, {}
         self.total_reward, self.val_total_rewards = [], []
 
@@ -56,7 +60,6 @@ class ALGPlotter:
                     kl_div += kl_divergence(a, b)
 
             self.data_to_plot[key_name].append(kl_div)
-
 
     def plots_online(self):
         # plot live:
@@ -119,22 +122,13 @@ class ALGPlotter:
 
     def neptune_init(self):
         if self.plot_neptune:
-            self.run = neptune.init(project='1919ars/MountainCarDDPG',
-                                    api_token=os.environ['NEPTUNE_API_TOKEN'],
-                                    tags=['mountainCar'],
-                                    name=f'{self.name}_mountainCar',
+            self.run = neptune.init(project='1919ars/MountainCarDDPG', api_token=os.environ['NEPTUNE_API_TOKEN'],
+                                    tags=self.tags, name=f'{self.name}_mountainCar',
                                     # source_files=['alg_constrants_amd_packages.py'],
                                     )
-            # Neptune.ai Logger
-            PARAMS = {
-                # 'GAMMA': GAMMA,
-                # 'LR': LR,
-                # 'CLIP_GRAD': CLIP_GRAD,
-                # 'MAX_STEPS': MAX_STEPS,
-            }
-            self.run['parameters'] = PARAMS
-        else:
-            self.run = {}
+
+    def neptune_set_parameters(self, params_dict):
+        self.run['parameters'] = params_dict
 
     def neptune_update(self, update_dict: dict):
         if self.plot_neptune:
@@ -179,3 +173,4 @@ class ALGPlotter:
 #     plot_neptune=NEPTUNE,
 #     name='my_run'
 # )
+

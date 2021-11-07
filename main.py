@@ -6,11 +6,11 @@ from alg_nets import *
 from alg_replay_buffer import ReplayBuffer
 from play import play
 from alg_functions import *
+torch.autograd.set_detect_anomaly(True)
 
-plotter = ALGPlotter(plot_life=PLOT_LIVE, plot_neptune=NEPTUNE, name='my_run')
+plotter = ALGPlotter(plot_life=PLOT_LIVE, plot_neptune=NEPTUNE, name='my_run', tags=[SINGLE_AGENT_ENV_NAME])
 env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME, plotter=plotter)
 
-torch.autograd.set_detect_anomaly(True)
 # --------------------------- # NETS # -------------------------- #
 critic = CriticNet(obs_size=env.observation_size(), n_actions=env.action_size(), n_agents=1)
 critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
@@ -57,7 +57,7 @@ for step in range(N_STEPS):
             plotter.debug(f'episode: {episode}')
             plotter.debug(f'Done! rewards: {rewards}')
             plotter.plots_update_data({'rewards': rewards})
-            plotter.neptune_update({'rewards': rewards})
+            plotter.neptune_update({'episode_score': rewards})
         episode += 1
         rewards = 0
 
@@ -111,14 +111,17 @@ plotter.close()
 env.close()
 plotter.info('Finished train.')
 
-# Save Results
+# Save & Run
 if SAVE_RESULTS:
+
+    # Saving...
     plotter.info('Saving results...')
     torch.save(actor, f'{SAVE_PATH}/actor.pt')
     torch.save(target_actor, f'{SAVE_PATH}/target_actor.pt')
-    # example runs
+
+    # Example runs
     plotter.info('Example run...')
     model = torch.load(f'{SAVE_PATH}/target_actor.pt')
     model.eval()
-    play(10, model=model)
+    play(env, 10, model=model)
 
