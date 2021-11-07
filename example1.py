@@ -130,7 +130,7 @@ def update_actor(state):
     actor_optimizer.zero_grad()
     q_value.backward()
     actor_optimizer.step()
-    plotter.neptune_update({'loss_actor': q_value.item()})
+    plotter.neptune_plot({'loss_actor': q_value.item()})
     return
 
 
@@ -140,7 +140,7 @@ def update_critic(state, action, target):
     critic_optimizer.zero_grad()
     loss.backward()
     critic_optimizer.step()
-    plotter.neptune_update({'loss_critic': loss.item()})
+    plotter.neptune_plot({'loss_critic': loss.item()})
     return
 
 
@@ -179,15 +179,17 @@ def main():
     while episode < cfg.max_episode:
         print('\riter {}, ep {}'.format(iteration_now, episode), end='')
         action = get_action(actor, state).item()
-        plotter.neptune_update({'action': action})
+        plotter.neptune_plot({'action_before_noise': action})
 
         # blend determinstic action with random action during exploration
         if episode < cfg.max_explore_eps:
             p = episode / cfg.max_explore_eps
             action = action * p + (1 - p) * next(noise)
+            plotter.neptune_plot({'p': p})
 
         next_state, reward, done, _ = env.step([action])
         memory.append([state, action, reward, next_state, done])
+        plotter.neptune_plot({'action': action})
 
         if iteration >= memory_warmup:
             memory_batch = memory.sample_batch(cfg.batch_size)
@@ -225,7 +227,7 @@ def main():
             avg_score_plot.append(avg_score_plot[-1] * 0.99 + episode_score * 0.01)
             last_score_plot.append(episode_score)
             drawnow(draw_fig)
-            plotter.neptune_update({'episode_score': episode_score})
+            plotter.neptune_plot({'episode_score': episode_score})
 
             start_time = time.perf_counter()
             episode += 1

@@ -130,7 +130,7 @@ class ALGPlotter:
     def neptune_set_parameters(self, params_dict):
         self.run['parameters'] = params_dict
 
-    def neptune_update(self, update_dict: dict):
+    def neptune_plot(self, update_dict: dict):
         if self.plot_neptune:
             for k, v in update_dict.items():
                 self.run[k].log(v)

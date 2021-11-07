@@ -41,7 +41,7 @@ MAX_CYCLES = 25
 # NUMBER_OF_AGENTS = 3
 NUMBER_OF_AGENTS = 1
 # ENV = simple_spread_v2.env(N=3, local_ratio=0.5, max_cycles=MAX_CYCLES, continuous_actions=True)
-ENV = simple_spread_v2.parallel_env(N=NUMBER_OF_AGENTS, local_ratio=0.5, max_cycles=MAX_CYCLES, continuous_actions=True)
+# ENV = simple_spread_v2.parallel_env(N=NUMBER_OF_AGENTS, local_ratio=0.5, max_cycles=MAX_CYCLES, continuous_actions=True)
 
 NUMBER_OF_GAMES = 10
 SAVE_RESULTS = True
@@ -50,8 +50,8 @@ SAVE_PATH = 'data'
 
 NEPTUNE = True
 # NEPTUNE = False
-PLOT_LIVE = True
-# PLOT_LIVE = False
+# PLOT_LIVE = True
+PLOT_LIVE = False
 RENDER_WHILE_TRAINING = False
 
 # ------------------------------------------- #
@@ -65,7 +65,8 @@ RENDER_WHILE_TRAINING = False
 
 BATCH_SIZE = 64  # size of the batches
 REPLAY_BUFFER_SIZE = BATCH_SIZE * 500
-N_STEPS = REPLAY_BUFFER_SIZE + 14000
+N_STEPS = REPLAY_BUFFER_SIZE + 20000
+N_EPISODES = 200
 LR_CRITIC = 1e-3  # learning rate
 LR_ACTOR = 1e-3  # learning rate
 GAMMA = 0.99  # discount factor

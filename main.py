@@ -9,6 +9,7 @@ from alg_functions import *
 torch.autograd.set_detect_anomaly(True)
 
 plotter = ALGPlotter(plot_life=PLOT_LIVE, plot_neptune=NEPTUNE, name='my_run', tags=[SINGLE_AGENT_ENV_NAME])
+plotter.neptune_set_parameters({f'{BATCH_SIZE}': BATCH_SIZE, f'{LR_CRITIC}': LR_CRITIC, f'{LR_ACTOR}': LR_ACTOR,})
 env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME, plotter=plotter)
 
 # --------------------------- # NETS # -------------------------- #
@@ -33,15 +34,16 @@ normal_distribution = Normal(torch.tensor(0.0), torch.tensor(current_sigma))
 observation = env.reset()
 
 rewards = 0
-episode = 0
-for step in range(N_STEPS):
+step, episode = 0, 0
+while step < N_STEPS and episode < N_EPISODES:
+    # for step in range(N_STEPS):
     print(f'\r(step {step - REPLAY_BUFFER_SIZE})', end='')
     # --------------------------- # STEP # -------------------------- #
     # action = env.sample_action()  # your agent here (this takes random actions)
     with torch.no_grad():
         noisy_action = actor(observation) + torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
         clipped_action = torch.clamp(noisy_action, min=-1, max=1)
-        plotter.neptune_update({'action': clipped_action.item()})
+        plotter.neptune_plot({'action': clipped_action.item()})
         new_observation, reward, done, info = env.step(clipped_action)
 
     # --------------------------- # STORE # -------------------------- #
@@ -57,7 +59,7 @@ for step in range(N_STEPS):
             plotter.debug(f'episode: {episode}')
             plotter.debug(f'Done! rewards: {rewards}')
             plotter.plots_update_data({'rewards': rewards})
-            plotter.neptune_update({'episode_score': rewards})
+            plotter.neptune_plot({'episode_score': rewards})
         episode += 1
         rewards = 0
 
@@ -100,12 +102,13 @@ for step in range(N_STEPS):
         soft_update(target_actor, actor, TAU)
 
         # --------------------------- # PLOTTER # -------------------------- #
-        plotter.neptune_update({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
+        plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
 
         if step % 10 == 0:
             plotter.plots_online()
 
         # ---------------------------------------------------------------- #
+    step += 1
 
 plotter.close()
 env.close()
@@ -123,5 +126,5 @@ if SAVE_RESULTS:
     plotter.info('Example run...')
     model = torch.load(f'{SAVE_PATH}/target_actor.pt')
     model.eval()
-    play(env, 10, model=model)
+    play(env, 3, model=model)
 
