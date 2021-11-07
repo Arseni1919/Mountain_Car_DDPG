@@ -32,8 +32,8 @@ parser.add_argument('--gamma', type=float, default=0.99)
 parser.add_argument('--lr', type=float, default=1e-4)
 parser.add_argument('--tau', type=float, default=0.001)
 parser.add_argument('--batch_size', type=int, default=64)
-parser.add_argument('--max_episode', type=int, default=200)
-parser.add_argument('--max_explore_eps', type=int, default=200)
+parser.add_argument('--max_episode', type=int, default=70)
+parser.add_argument('--max_explore_eps', type=int, default=70)
 
 cfg = parser.parse_args()
 
@@ -79,7 +79,7 @@ class Actor(nn.Module):
     def forward(self, x):
         out = F.elu(self.fc_1(x))
         out = F.elu(self.fc_2(out))
-        out = F.tanh(self.fc_out(out))
+        out = torch.tanh(self.fc_out(out))
         return out
 
 
@@ -171,21 +171,23 @@ def main():
     iteration = 0
     episode = 0
     episode_score = 0
-    episode_steps = 0
     memory_warmup = cfg.batch_size * 3
 
     memory = Memory(memory_size=10000)
     start_time = time.perf_counter()
     while episode < cfg.max_episode:
-        print('\riter {}, ep {}'.format(iteration_now, episode), end='')
-        action = get_action(actor, state).item()
-        plotter.neptune_plot({'action_before_noise': action})
+        print(f'\riter {iteration_now}, ep {episode}', end='')
+        action_before_noise = get_action(actor, state).item()
+        plotter.neptune_plot({'action_before_noise': action_before_noise})
 
         # blend determinstic action with random action during exploration
         if episode < cfg.max_explore_eps:
             p = episode / cfg.max_explore_eps
-            action = action * p + (1 - p) * next(noise)
+            noise_part = next(noise)
+            action = action_before_noise * p + (1 - p) * noise_part
             plotter.neptune_plot({'p': p})
+            plotter.neptune_plot({'noise_part': noise_part})
+            plotter.neptune_plot({'action_difference': abs(action_before_noise - action)})
 
         next_state, reward, done, _ = env.step([action])
         memory.append([state, action, reward, next_state, done])
@@ -207,7 +209,7 @@ def main():
             Q_target_batch = reward_batch[:, None] + cfg.gamma * (1 - done_batch[:, None]) * Q_next
             update_critic(state_batch, action_batch[:, None], Q_target_batch)
 
-            # the action corresponds to the state_batch now is nolonger the action stored in buffer,
+            # the action corresponds to the state_batch now is no longer the action stored in buffer,
             # so we need to use actor to compute the action first, then use the critic to compute the q-value
             update_actor(state_batch)
 
@@ -216,14 +218,13 @@ def main():
             soft_update(critic_target, critic, cfg.tau)
 
         episode_score += reward
-        episode_steps += 1
         iteration_now += 1
         iteration += 1
         if episode % 10 == 0:
             env.render()
         if done:
             print(', score {:8f}, steps {}, ({:2f} sec/eps)'.
-                  format(episode_score, episode_steps, time.perf_counter() - start_time))
+                  format(episode_score, iteration_now, time.perf_counter() - start_time))
             avg_score_plot.append(avg_score_plot[-1] * 0.99 + episode_score * 0.01)
             last_score_plot.append(episode_score)
             drawnow(draw_fig)
@@ -232,7 +233,6 @@ def main():
             start_time = time.perf_counter()
             episode += 1
             episode_score = 0
-            episode_steps = 0
             iteration_now = 0
 
             state = env.reset()

@@ -16,8 +16,8 @@ class ActorNet(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(obs_size, HIDDEN_SIZE),
             nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
-            nn.ReLU(),
+            # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
+            # nn.ReLU(),
             nn.Linear(HIDDEN_SIZE, n_actions),
             nn.Tanh(),
             # nn.Sigmoid(),
@@ -49,8 +49,8 @@ class CriticNet(nn.Module):
         self.obs_net = nn.Sequential(
             nn.Linear(obs_size * n_agents, HIDDEN_SIZE),
             nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
-            nn.ReLU(),
+            # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
+            # nn.ReLU(),
             nn.Linear(HIDDEN_SIZE, obs_size * n_agents),
             nn.ReLU(),
         )
@@ -58,8 +58,8 @@ class CriticNet(nn.Module):
         self.out_net = nn.Sequential(
             nn.Linear(obs_size * n_agents + n_actions * n_agents, HIDDEN_SIZE),
             nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
-            nn.ReLU(),
+            # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
+            # nn.ReLU(),
             nn.Linear(HIDDEN_SIZE, 1),
         )
 

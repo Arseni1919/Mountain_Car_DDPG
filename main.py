@@ -30,21 +30,32 @@ current_sigma = SIGMA
 normal_distribution = Normal(torch.tensor(0.0), torch.tensor(current_sigma))
 # normal_distribution.sample()
 
+# Simple Ornstein-Uhlenbeck Noise generator
+ou_noise = OUNoise()
+
 # --------------------------- # FIRST OBSERVATION # -------------------------- #
 observation = env.reset()
 
 rewards = 0
-step, episode = 0, 0
+step, episode, p = 0, 0, 0
 while step < N_STEPS and episode < N_EPISODES:
     # for step in range(N_STEPS):
     print(f'\r(step {step - REPLAY_BUFFER_SIZE})', end='')
     # --------------------------- # STEP # -------------------------- #
     # action = env.sample_action()  # your agent here (this takes random actions)
     with torch.no_grad():
-        noisy_action = actor(observation) + torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
-        clipped_action = torch.clamp(noisy_action, min=-1, max=1)
-        plotter.neptune_plot({'action': clipped_action.item()})
+        action_before_noise = actor(observation)
+        # noise_part = torch.normal(mean=torch.tensor(0.0), std=torch.tensor(current_sigma))
+        noise_part = next(ou_noise)
+        action = action_before_noise * p + noise_part * (1 - p)
+        clipped_action = torch.clamp(action, min=-1, max=1)
         new_observation, reward, done, info = env.step(clipped_action)
+        if step > WARMUP:
+            p = episode / N_EPISODES
+            plotter.neptune_plot({'action': clipped_action.item(), 'action_before_noise': action_before_noise.item()})
+            plotter.neptune_plot({'action_difference': abs(clipped_action.item() - action_before_noise.item())})
+            plotter.neptune_plot({'noise_part': noise_part})
+            plotter.neptune_plot({'p': p})
 
     # --------------------------- # STORE # -------------------------- #
     replay_buffer.append((observation, clipped_action, reward, done, new_observation))
@@ -55,29 +66,28 @@ while step < N_STEPS and episode < N_EPISODES:
     if done:
         observation = env.reset()
         plotter.plots_update_data({'rewards': rewards})
-        if step > REPLAY_BUFFER_SIZE:
-            plotter.debug(f'episode: {episode}')
-            plotter.debug(f'Done! rewards: {rewards}')
+        if step > WARMUP:
+            plotter.debug(f'episode: {episode}. Total reward: {rewards}')
             plotter.plots_update_data({'rewards': rewards})
             plotter.neptune_plot({'episode_score': rewards})
         episode += 1
         rewards = 0
+        ou_noise = OUNoise()
 
-    if step > REPLAY_BUFFER_SIZE and step % 100 == 0:
-        current_sigma = SIGMA - (step - len(replay_buffer))*(SIGMA/(N_STEPS - len(replay_buffer)))
+    if step > WARMUP:
         if episode % 5 == 0:
             env.render()
         # print(f'step: {step}')
         # --------------------------- # MINIBATCH # -------------------------- #
         minibatch = replay_buffer.sample(n=BATCH_SIZE)
-
-        # --------------------------- # Y # -------------------------- #
         b_observations, b_actions, b_rewards, b_dones, b_next_observations = zip(*minibatch)
         b_observations = torch.stack(b_observations).squeeze()
         b_actions = torch.stack(b_actions).squeeze(1)
         b_rewards = torch.stack(b_rewards).squeeze()
         b_dones = torch.stack(b_dones).squeeze()
         b_next_observations = torch.stack(b_next_observations).squeeze()
+
+        # --------------------------- # Y # -------------------------- #
         with torch.no_grad():
             next_q = target_critic(state=b_next_observations, action=target_actor(b_next_observations)).squeeze()
             next_q = (~b_dones) * next_q
@@ -87,7 +97,7 @@ while step < N_STEPS and episode < N_EPISODES:
         loss = nn.MSELoss()
         critic_optim.zero_grad()
         critic_loss_input = critic(state=b_observations, action=b_actions).squeeze()
-        critic_loss = loss(critic_loss_input, y)
+        critic_loss = F.mse_loss(critic_loss_input, y)
         critic_loss.backward()
         critic_optim.step()
 

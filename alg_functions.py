@@ -39,4 +39,16 @@ def soft_update(target, source, tau, plotter=None):
         target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
     if plotter:
         # plotter.plots_update_entropy(source, target, 'critic')
+        # plotter.neptune_plot({'entropy': critic_loss.item(), 'loss_actor': actor_loss.item()})
         pass
+
+
+def OUNoise():
+    theta = 0.15
+    sigma = 0.3
+    mu = 0
+    state = 0
+    while True:
+        yield state
+        state += theta * (mu - state) + sigma * np.random.randn()
+

@@ -128,7 +128,8 @@ class ALGPlotter:
                                     )
 
     def neptune_set_parameters(self, params_dict):
-        self.run['parameters'] = params_dict
+        if self.plot_neptune:
+            self.run['parameters'] = params_dict
 
     def neptune_plot(self, update_dict: dict):
         if self.plot_neptune:
@@ -137,9 +138,9 @@ class ALGPlotter:
                 # self.run[k].log(f'{v}')
 
     def close(self):
-        if NEPTUNE:
+        if self.plot_neptune:
             self.run.stop()
-        if PLOT_LIVE:
+        if self.plot_life:
             plt.close()
 
     @staticmethod
