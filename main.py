@@ -110,6 +110,15 @@ while step < N_STEPS and episode < N_EPISODES:
         # --------------------------- # UPDATE TARGET NETS # -------------------------- #
         soft_update(target_critic, critic, TAU)
         soft_update(target_actor, actor, TAU)
+        if step % 100 == 0:
+            print()
+            p = list(actor.parameters())[0][:5, 1].detach().numpy()
+            plotter.info(f'{p}')
+            q = list(target_actor.parameters())[0][:5, 1].detach().numpy()
+            plotter.info(f'{q}')
+            mse = np.square(p - q).mean(axis=0)
+            plotter.neptune_plot({'mse': mse})
+            print(mse)
 
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
