@@ -8,7 +8,7 @@
 
 ![ddpg](static/pseudo1.png)
 
-### What was important:
+# !!! What was important:
 
 - The random noise to help for better exploration ([Ornstein–Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process))
 - The initialization of weights ([torch.nn.init.xavier_normal_](https://pytorch.org/docs/stable/nn.init.html#torch.nn.init.xavier_normal_))
