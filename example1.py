@@ -14,7 +14,8 @@ from drawnow import drawnow
 import matplotlib.pyplot as plt
 
 from alg_plotter import ALGPlotter
-plotter = ALGPlotter(plot_life=True, plot_neptune=False, name='example_run', tags=['MountainCarContinuous-v0'])
+from alg_functions import *
+plotter = ALGPlotter(plot_life=True, plot_neptune=True, name='example_run', tags=['MountainCarContinuous-v0'])
 
 last_score_plot = [0]
 avg_score_plot = [0]
@@ -162,6 +163,9 @@ critic_target.load_state_dict(critic.state_dict())
 actor_optimizer = optim.Adam(actor.parameters(), lr=cfg.lr)
 critic_optimizer = optim.Adam(critic.parameters(), lr=cfg.lr)
 
+plotter.matrix_update('critic', critic)
+plotter.matrix_update('actor', actor)
+
 
 def main():
     # env = wrappers.Monitor(env,'./tmp/',force=True)
@@ -218,6 +222,11 @@ def main():
             soft_update(actor_target, actor, cfg.tau)
             soft_update(critic_target, critic, cfg.tau)
 
+            mse_critic = matrix_mse_mats(plotter.matrix_get_prev('critic'), matrix_get(critic))
+            plotter.neptune_plot({'mse_critic': mse_critic})
+            mse_actor = matrix_mse_mats(plotter.matrix_get_prev('actor'), matrix_get(actor))
+            plotter.neptune_plot({'mse_actor': mse_actor})
+
         episode_score += reward
         iteration_now += 1
         iteration += 1
@@ -226,6 +235,8 @@ def main():
             if iteration_now % 100 == 0:
                 plotter.plot_nn_map(actor, critic)
             # print(list(actor.parameters())[0].data.numpy()[0,0])
+        plotter.matrix_update('critic', critic)
+        plotter.matrix_update('actor', actor)
         if done:
             print(', score {:8f}, steps {}, ({:2f} sec/eps)'.
                   format(episode_score, iteration_now, time.perf_counter() - start_time))

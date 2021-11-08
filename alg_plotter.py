@@ -25,7 +25,8 @@ class ALGPlotter:
         self.tags = tags
         self.fig, self.actor_losses, self.critic_losses, self.ax, self.agents_list = {}, {}, {}, {}, {}
         self.total_reward, self.val_total_rewards = [], []
-        self.prev_matrix_dict = {}
+        # self.prev_matrix_dict = {}
+        self.matrix_dict = {}
 
         self.neptune_init()
         self.logging_init()
@@ -117,27 +118,27 @@ class ALGPlotter:
             ax_list = self.fig.axes
 
             name = 'critic'
-            current_mat = get_matrix(net_critic)
-            prev_mat = self.get_prev(name, current_mat)
+            current_mat = matrix_get(net_critic)
+            prev_mat = self.matrix_get_prev(name)
             mat3 = current_mat - prev_mat
             plot_graph(ax_list[1], mat3, name)
 
             name = 'actor'
-            current_mat = get_matrix(net_actor)
-            prev_mat = self.get_prev(name, current_mat)
+            current_mat = matrix_get(net_actor)
+            prev_mat = self.matrix_get_prev(name)
             # print(f'(prev: {prev_mat[0][0]}, curr: {current_mat[0][0]})')
             mat3 = current_mat - prev_mat
             plot_graph(ax_list[0], mat3, name)
             plt.pause(0.05)
 
-    def get_prev(self, name, input_layer):
-        if name not in self.prev_matrix_dict:
-            self.prev_matrix_dict[name] = np.copy(input_layer)
-        output = self.prev_matrix_dict[name]
-        # output = np.divide(output, self.prev_matrix)
-        self.prev_matrix_dict[name] = np.copy(input_layer)
-        return output
+    def matrix_get_prev(self, name):
+        if name not in self.matrix_dict:
+            raise RuntimeError('Call matrix_update before get_prev!')
+        return np.copy(self.matrix_dict[name])
 
+    def matrix_update(self, name, net):
+        matrix = matrix_get(net)
+        self.matrix_dict[name] = np.copy(matrix)
 
     def close(self):
         if self.plot_neptune:

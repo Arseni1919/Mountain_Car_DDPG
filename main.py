@@ -14,13 +14,17 @@ env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME, plotter=plotter)
 
 # --------------------------- # NETS # -------------------------- #
 critic = CriticNet(obs_size=env.observation_size(), n_actions=env.action_size(), n_agents=1)
-critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
-actor = ActorNet(obs_size=env.observation_size(), n_actions=env.action_size())
-actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
 target_critic = CriticNet(obs_size=env.observation_size(), n_actions=env.action_size(), n_agents=1)
 target_critic.load_state_dict(critic.state_dict())
+actor = ActorNet(obs_size=env.observation_size(), n_actions=env.action_size())
 target_actor = ActorNet(obs_size=env.observation_size(), n_actions=env.action_size())
 target_actor.load_state_dict(actor.state_dict())
+
+critic_optim = torch.optim.Adam(critic.parameters(), lr=LR_CRITIC)
+actor_optim = torch.optim.Adam(actor.parameters(), lr=LR_ACTOR)
+
+plotter.matrix_update('critic', critic)
+plotter.matrix_update('actor', actor)
 
 # --------------------------- # REPLAY BUFFER # -------------------------- #
 replay_buffer = ReplayBuffer()
@@ -110,24 +114,22 @@ while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
         # --------------------------- # UPDATE TARGET NETS # -------------------------- #
         soft_update(target_critic, critic, TAU)
         soft_update(target_actor, actor, TAU)
-        if step % 100 == 0:
-            # print()
-            v1 = list(actor.parameters())[0][:, 1].detach().numpy()
-            # plotter.info(f'{v1}')
-            v2 = list(target_actor.parameters())[0][:, 1].detach().numpy()
-            # plotter.info(f'{v2}')
-            mse = np.square(v1 - v2).mean(axis=0)
-            plotter.neptune_plot({'mse': mse})
-            # print(mse)
 
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
+        mse_critic = matrix_mse_mats(plotter.matrix_get_prev('critic'), matrix_get(critic))
+        plotter.neptune_plot({'mse_critic': mse_critic})
+        mse_actor = matrix_mse_mats(plotter.matrix_get_prev('actor'), matrix_get(actor))
+        plotter.neptune_plot({'mse_actor': mse_actor})
 
-        if step % 100 == 0:
+        if step % 100 == 0 and episode > 50:
             # plotter.plots_online()
-            plotter.plot_nn_map(net_actor=actor, net_critic=critic)
+            # plotter.plot_nn_map(net_actor=actor, net_critic=critic)
+            # print(f'mse_critic: {mse_critic}, mse_actor: {mse_actor}')
             pass
 
+        plotter.matrix_update('critic', critic)
+        plotter.matrix_update('actor', actor)
         # ---------------------------------------------------------------- #
     step += 1
 

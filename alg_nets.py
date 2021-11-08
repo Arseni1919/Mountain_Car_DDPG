@@ -12,17 +12,19 @@ class ActorNet(nn.Module):
 
     def __init__(self, obs_size: int, n_actions: int):
         super(ActorNet, self).__init__()
-        self.fc1 = nn.Linear(obs_size, HIDDEN_SIZE)
-        self.fc2 = nn.Linear(HIDDEN_SIZE, n_actions)
+        self.fc1 = nn.Linear(obs_size, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, n_actions)
         init.xavier_normal_(self.fc1.weight)
         init.xavier_normal_(self.fc2.weight)
+        init.xavier_normal_(self.fc3.weight)
 
         self.net = nn.Sequential(
             self.fc1,
-            nn.ReLU(),
-            # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
-            # nn.ReLU(),
+            nn.ELU(),
             self.fc2,
+            nn.ELU(),
+            self.fc3,
             nn.Tanh(),
             # nn.Sigmoid(),
         )
@@ -49,30 +51,32 @@ class CriticNet(nn.Module):
 
     def __init__(self, obs_size: int, n_actions: int, n_agents: int):
         super(CriticNet, self).__init__()
-        self.fc1 = nn.Linear(obs_size * n_agents, HIDDEN_SIZE)
-        self.fc2 = nn.Linear(HIDDEN_SIZE, obs_size * n_agents)
-        self.fc3 = nn.Linear(obs_size * n_agents + n_actions * n_agents, HIDDEN_SIZE)
-        self.fc4 = nn.Linear(HIDDEN_SIZE, 1)
+        self.fc1 = nn.Linear(obs_size * n_agents, 64)
+        self.fc2 = nn.Linear(64, obs_size * n_agents)
+        self.fc3 = nn.Linear(obs_size * n_agents + n_actions * n_agents, 64)
+        self.fc4 = nn.Linear(64, 64)
+        self.fc5 = nn.Linear(64, 1)
         init.xavier_normal_(self.fc1.weight)
         init.xavier_normal_(self.fc2.weight)
         init.xavier_normal_(self.fc3.weight)
         init.xavier_normal_(self.fc4.weight)
+        init.xavier_normal_(self.fc5.weight)
 
         self.obs_net = nn.Sequential(
             self.fc1,
-            nn.ReLU(),
+            nn.ELU(),
             # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
             # nn.ReLU(),
             self.fc2,
-            nn.ReLU(),
+            nn.ELU(),
         )
 
         self.out_net = nn.Sequential(
             self.fc3,
-            nn.ReLU(),
-            # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
-            # nn.ReLU(),
+            nn.ELU(),
             self.fc4,
+            nn.ELU(),
+            self.fc5,
         )
 
         self.n_actions = n_actions

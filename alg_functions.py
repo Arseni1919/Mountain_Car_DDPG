@@ -1,3 +1,5 @@
+import numpy as np
+
 from GLOBALS import *
 
 
@@ -53,29 +55,50 @@ def OUNoise():
         state += theta * (mu - state) + sigma * np.random.randn()
 
 
-def get_matrix(net):
-    matrix = np.zeros((1,64))
+def matrix_get(net):
+    big_list = np.zeros(1)
     for layer in list(net.parameters()):
         layer_np = layer.data.numpy().copy()
-        # print(len(layer_np.shape))
         if len(layer_np.shape) > 1:
-            layer_np = layer_np.reshape((1, np.dot(*layer_np.shape)))
+            layer_np = layer_np.reshape(np.dot(*layer_np.shape))
         else:
-            layer_np = layer_np.reshape((1, layer_np.shape[0]))
-        to_add = np.zeros((1, layer_np.shape[1] % 64))
-        layer_np = np.concatenate((layer_np, to_add), axis=1)
-        times64 = int(layer_np.shape[1] / 64)
-        for t in range(times64):
-            one_part = layer_np[:,t*64:(t+1)*64]
-            matrix = np.concatenate((matrix, one_part), axis=0)
-    return matrix[1:, :]
+            layer_np = layer_np.reshape(layer_np.shape[0])
+        big_list = np.concatenate((big_list, layer_np), axis=0)
+
+    to_add = np.zeros(64 - (big_list.shape[0] % 64))
+    big_list = np.concatenate((big_list, to_add), axis=0)
+    times64 = int(big_list.shape[0] / 64)
+    matrix = []
+    for t in range(times64):
+        one_part = big_list[t*64:(t+1)*64]
+        matrix.append(one_part)
+    matrix = np.array(matrix)
+    return matrix.copy()
 
 
-def get_diff_matrix(net1, net2):
-    mat1 = get_matrix(net1)
-    mat2 = get_matrix(net2)
+def matrix_square_sum(mat):
+    mat1 = np.square(mat)
+    mat2 = np.sum(mat1)
+    return mat2
+
+
+def matrix_get_diff(net1, net2):
+    mat1 = matrix_get(net1)
+    mat2 = matrix_get(net2)
     mat3 = mat1 - mat2
     return mat3
+
+
+def matrix_mse_nets(net1, net2):
+    mat_diff = matrix_get_diff(net1, net2)
+    output = matrix_square_sum(mat_diff)
+    return output
+
+
+def matrix_mse_mats(mat1, mat2):
+    mat_diff = mat1 - mat2
+    mat_output = matrix_square_sum(mat_diff)
+    return mat_output
 
 
 def get_cube_of_weights(net, layer_indx):
