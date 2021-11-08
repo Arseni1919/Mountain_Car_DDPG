@@ -8,10 +8,12 @@
 
 ![ddpg](static/pseudo1.png)
 
-### Parameters:
-```
+### What was important:
 
-```
+- The random noise to help for better exploration ([Ornstein–Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process))
+- The initialization of weights ([torch.nn.init.xavier_normal_](https://pytorch.org/docs/stable/nn.init.html#torch.nn.init.xavier_normal_))
+- The architecture was not big enough (just play with it a bit)
+- The activation function ([ELU](https://pytorch.org/docs/stable/generated/torch.nn.ELU.html))
 
 ### DDPG net:
 ```
