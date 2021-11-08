@@ -79,7 +79,7 @@ while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
         ou_noise = OUNoise()
 
     if step > WARMUP:
-        if episode % 5 == 0:
+        if episode > 65:
             env.render()
         # print(f'step: {step}')
         # --------------------------- # MINIBATCH # -------------------------- #
@@ -119,8 +119,11 @@ while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
         plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
         mse_critic = matrix_mse_mats(plotter.matrix_get_prev('critic'), matrix_get(critic))
         plotter.neptune_plot({'mse_critic': mse_critic})
-        mse_actor = matrix_mse_mats(plotter.matrix_get_prev('actor'), matrix_get(actor))
+        mat1 = plotter.matrix_get_prev('actor')
+        mat2 = matrix_get(actor)
+        mse_actor = matrix_mse_mats(mat1, mat2)
         plotter.neptune_plot({'mse_actor': mse_actor})
+        plotter.neptune_plot({'max_diff_actor': np.max(np.abs(mat1-mat2))})
 
         if step % 100 == 0 and episode % 10 == 0:
             # plotter.plots_online()
