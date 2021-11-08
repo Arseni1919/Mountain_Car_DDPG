@@ -25,15 +25,40 @@ class ALGPlotter:
         self.tags = tags
         self.fig, self.actor_losses, self.critic_losses, self.ax, self.agents_list = {}, {}, {}, {}, {}
         self.total_reward, self.val_total_rewards = [], []
+        self.prev_matrix_dict = {}
 
         self.neptune_init()
         self.logging_init()
 
         if self.plot_life:
-            self.fig, self.ax = plt.subplots(nrows=2, ncols=2, figsize=(12, 6))
+            self.fig, self.ax = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
             self.data_to_plot = {}
 
         self.info("ALGPlotter instance created.")
+
+    def neptune_init(self):
+        if self.plot_neptune:
+            self.run = neptune.init(project='1919ars/MountainCarDDPG', api_token=os.environ['NEPTUNE_API_TOKEN'],
+                                    tags=self.tags, name=f'{self.name}_mountainCar',
+                                    # source_files=['alg_constrants_amd_packages.py'],
+                                    )
+
+    def neptune_set_parameters(self, params_dict=None):
+        if self.plot_neptune:
+            params_dict = {
+                f'{BATCH_SIZE}': BATCH_SIZE,
+                f'{LR_CRITIC}': LR_CRITIC,
+                f'{LR_ACTOR}': LR_ACTOR,
+                f'{TAU}': TAU,
+                f'{GAMMA}': GAMMA,
+            }
+            self.run['parameters'] = params_dict
+
+    def neptune_plot(self, update_dict: dict):
+        if self.plot_neptune:
+            for k, v in update_dict.items():
+                self.run[k].log(v)
+                # self.run[k].log(f'{v}')
 
     def plots_update_data(self, data_dict, no_list=False):
         if self.plot_life:
@@ -44,22 +69,6 @@ class ALGPlotter:
                     if key_name not in self.data_to_plot:
                         self.data_to_plot[key_name] = deque(maxlen=50000)
                     self.data_to_plot[key_name].append(value)
-
-    def plots_update_entropy(self, net1, net2, name=''):
-        if self.plot_life:
-            key_name = f'kl_div_{name}'
-            if key_name not in self.data_to_plot:
-                self.data_to_plot[key_name] = deque(maxlen=50000)
-
-            kl_div = 0
-            list_params_net1 = list(net1.parameters())
-            list_params_net2 = list(net2.parameters())
-            for p1, p2 in zip(list_params_net1, list_params_net2):
-                for i in range(len(p1)):
-                    a, b = p1[i].softmax(dim=0).detach().numpy(), p2[i].softmax(dim=0).detach().numpy()
-                    kl_div += kl_divergence(a, b)
-
-            self.data_to_plot[key_name].append(kl_div)
 
     def plots_online(self):
         # plot live:
@@ -84,62 +93,57 @@ class ALGPlotter:
             # for key_name, list_of_values in self.data_to_plot.items():
             #     plot_graph_axes(self.fig.axes[counter], list_of_values, key_name)
             #     counter += 1
-            if 'reward' in self.data_to_plot:
-                plot_graph(self.ax, 0, 0, self.data_to_plot['reward'], 'Reward')
-            if 'critic value' in self.data_to_plot:
-                plot_graph(self.ax, 0, 0, self.data_to_plot['critic value'], 'critic value', color='red', cla=False)
-            if 'current_sigma' in self.data_to_plot:
-                plot_graph(self.ax, 0, 0, self.data_to_plot['current_sigma'], 'current_sigma')
-            if 'critic_loss' in self.data_to_plot:
-                steps = len(self.data_to_plot['critic_loss'])
-                list_to_show = moving_average(self.data_to_plot['critic_loss'], steps / 100)
-                plot_graph(self.ax, 0, 1, list_to_show, 'critic_loss')
-            if 'actor_loss' in self.data_to_plot:
-                steps = len(self.data_to_plot['actor_loss'])
-                list_to_show = moving_average(self.data_to_plot['actor_loss'], steps / 100)
-                plot_graph(self.ax, 1, 0, list_to_show, 'actor_loss')
-                # plot_graph(self.ax, 1, 0, self.data_to_plot['actor_loss'], 'actor_loss')
+
             if 'rewards' in self.data_to_plot:
                 plot_graph(self.ax, 1, 1, self.data_to_plot['rewards'], 'Rewards')
-            if 'action' in self.data_to_plot:
-                plot_graph(self.ax, 1, 1, self.data_to_plot['action'], 'action')
-            if 'kl_div_actor' in self.data_to_plot:
-                plot_graph(self.ax, 1, 1, self.data_to_plot['kl_div_actor'], 'kl_div_actor')
-            if 'kl_div_critic' in self.data_to_plot:
-                plot_graph(self.ax, 1, 1, self.data_to_plot['kl_div_critic'], 'kl_div_critic', color='red', cla=False)
-
-            # X = self.data_to_plot['obs1']
-            # Y = self.data_to_plot['obs2']
-            # Z = self.data_to_plot['critic_values']
-            # self.ax[1, 1].cla()
-            # self.ax[1, 1] = self.fig.add_subplot(2,2,4, projection='3d')
-            # self.ax[1, 1].plot_surface(X, Y, Z, linewidth=0, antialiased=False)
 
             plt.pause(0.05)
 
-    def plot_summary(self):
-        pass
+    def plot_nn_map(self, net_actor=None, net_critic=None, net_actor_target=None, net_critic_target=None):
+        if self.plot_life:
+            def plot_graph(ax, values, label, cla=True):
+                if cla:
+                    ax.cla()
+                im = ax.imshow(values, cmap='hot', interpolation='nearest')
+                # ax[indx_r, indx_c].set_title(f'Plot: {label}')
+                # ax[indx_r, indx_c].set_xlabel('iters')
+                # divider = make_axes_locatable(ax)
+                # cax = divider.append_axes("right", size="5%", pad=0.05)
+                # plt.colorbar(im, cax=cax)
+                ax.set_ylabel(f'{label}')
 
-    def neptune_init(self):
-        if self.plot_neptune:
-            self.run = neptune.init(project='1919ars/MountainCarDDPG', api_token=os.environ['NEPTUNE_API_TOKEN'],
-                                    tags=self.tags, name=f'{self.name}_mountainCar',
-                                    # source_files=['alg_constrants_amd_packages.py'],
-                                    )
+            ax_list = self.fig.axes
 
-    def neptune_set_parameters(self, params_dict):
-        if self.plot_neptune:
-            self.run['parameters'] = params_dict
+            name = 'critic'
+            current_mat = get_matrix(net_critic)
+            prev_mat = self.get_prev(name, current_mat)
+            mat3 = current_mat - prev_mat
+            plot_graph(ax_list[1], mat3, name)
 
-    def neptune_plot(self, update_dict: dict):
-        if self.plot_neptune:
-            for k, v in update_dict.items():
-                self.run[k].log(v)
-                # self.run[k].log(f'{v}')
+            name = 'actor'
+            current_mat = get_matrix(net_actor)
+            prev_mat = self.get_prev(name, current_mat)
+            # print(f'(prev: {prev_mat[0][0]}, curr: {current_mat[0][0]})')
+            mat3 = current_mat - prev_mat
+            plot_graph(ax_list[0], mat3, name)
+            plt.pause(0.05)
+
+    def get_prev(self, name, input_layer):
+        if name not in self.prev_matrix_dict:
+            self.prev_matrix_dict[name] = np.copy(input_layer)
+        output = self.prev_matrix_dict[name]
+        # output = np.divide(output, self.prev_matrix)
+        self.prev_matrix_dict[name] = np.copy(input_layer)
+        return output
+
 
     def close(self):
         if self.plot_neptune:
             self.run.stop()
+            # file_path = '.neptune'
+            # if os.path.exists(file_path):
+            #     # removing the file using the os.remove() method
+            #     os.remove(file_path)
         if self.plot_life:
             plt.close()
 

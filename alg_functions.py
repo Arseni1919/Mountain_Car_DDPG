@@ -52,3 +52,35 @@ def OUNoise():
         yield state
         state += theta * (mu - state) + sigma * np.random.randn()
 
+
+def get_matrix(net):
+    matrix = np.zeros((1,64))
+    for layer in list(net.parameters()):
+        layer_np = layer.data.numpy().copy()
+        # print(len(layer_np.shape))
+        if len(layer_np.shape) > 1:
+            layer_np = layer_np.reshape((1, np.dot(*layer_np.shape)))
+        else:
+            layer_np = layer_np.reshape((1, layer_np.shape[0]))
+        to_add = np.zeros((1, layer_np.shape[1] % 64))
+        layer_np = np.concatenate((layer_np, to_add), axis=1)
+        times64 = int(layer_np.shape[1] / 64)
+        for t in range(times64):
+            one_part = layer_np[:,t*64:(t+1)*64]
+            matrix = np.concatenate((matrix, one_part), axis=0)
+    return matrix[1:, :]
+
+
+def get_diff_matrix(net1, net2):
+    mat1 = get_matrix(net1)
+    mat2 = get_matrix(net2)
+    mat3 = mat1 - mat2
+    return mat3
+
+
+def get_cube_of_weights(net, layer_indx):
+    layer = list(net.parameters())[layer_indx].data.numpy().copy()
+    line_num = np.dot(*layer.shape)
+    side = int(np.sqrt(line_num))
+    _layer_row = layer.reshape(line_num)[:side ** 2]
+    return _layer_row.reshape((side, side)), _layer_row

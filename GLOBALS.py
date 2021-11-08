@@ -12,6 +12,7 @@ import gym
 import pettingzoo
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import plotly
 import plotly.express as px
 import neptune.new as neptune
@@ -20,6 +21,7 @@ from dotenv import load_dotenv
 
 import torch
 from torch import nn
+import torch.nn.init as init
 import torch.nn.functional as F
 from torch.autograd import Variable
 # from torchvision import transforms
@@ -48,10 +50,10 @@ SAVE_RESULTS = True
 # SAVE_RESULTS = False
 SAVE_PATH = 'data'
 
-NEPTUNE = True
-# NEPTUNE = False
-# PLOT_LIVE = True
-PLOT_LIVE = False
+# NEPTUNE = True
+NEPTUNE = False
+PLOT_LIVE = True
+# PLOT_LIVE = False
 RENDER_WHILE_TRAINING = False
 
 # ------------------------------------------- #
@@ -68,15 +70,15 @@ REPLAY_BUFFER_SIZE = BATCH_SIZE * 157
 WARMUP = BATCH_SIZE * 3
 N_STEPS = REPLAY_BUFFER_SIZE + 10000
 # N_EPISODES = 120
-N_EPISODES = 10
-LR_CRITIC = 1e-3  # learning rate
-LR_ACTOR = 1e-3  # learning rate
+N_EPISODES = 70
+LR_CRITIC = 1e-4  # learning rate
+LR_ACTOR = 1e-4  # learning rate
 GAMMA = 0.99  # discount factor
 EPSILON = 0.00
 SIGMA = 0.4
 POLYAK = 0.99
-TAU = 0.01
+TAU = 0.001
 VAL_EVERY = 2000
 TRAIN_EVERY = 100
-HIDDEN_SIZE = 256
+HIDDEN_SIZE = 64
 Experience = namedtuple('Experience', ['state', 'action', 'reward', 'done', 'new_state'])

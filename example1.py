@@ -14,7 +14,7 @@ from drawnow import drawnow
 import matplotlib.pyplot as plt
 
 from alg_plotter import ALGPlotter
-plotter = ALGPlotter(plot_life=False, plot_neptune=True, name='example_run', tags=['MountainCarContinuous-v0'])
+plotter = ALGPlotter(plot_life=True, plot_neptune=False, name='example_run', tags=['MountainCarContinuous-v0'])
 
 last_score_plot = [0]
 avg_score_plot = [0]
@@ -131,6 +131,7 @@ def update_actor(state):
     q_value.backward()
     actor_optimizer.step()
     plotter.neptune_plot({'loss_actor': q_value.item()})
+    # plotter.plot_nn_map(actor, critic)
     return
 
 
@@ -220,14 +221,17 @@ def main():
         episode_score += reward
         iteration_now += 1
         iteration += 1
-        if episode % 10 == 0:
-            env.render()
+        if episode % 2 == 0 and episode > 60:
+            # env.render()
+            if iteration_now % 100 == 0:
+                plotter.plot_nn_map(actor, critic)
+            # print(list(actor.parameters())[0].data.numpy()[0,0])
         if done:
             print(', score {:8f}, steps {}, ({:2f} sec/eps)'.
                   format(episode_score, iteration_now, time.perf_counter() - start_time))
             avg_score_plot.append(avg_score_plot[-1] * 0.99 + episode_score * 0.01)
             last_score_plot.append(episode_score)
-            drawnow(draw_fig)
+            # drawnow(draw_fig)
             plotter.neptune_plot({'episode_score': episode_score})
 
             start_time = time.perf_counter()

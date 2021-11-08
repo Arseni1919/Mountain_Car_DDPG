@@ -12,13 +12,17 @@ class ActorNet(nn.Module):
 
     def __init__(self, obs_size: int, n_actions: int):
         super(ActorNet, self).__init__()
+        self.fc1 = nn.Linear(obs_size, HIDDEN_SIZE)
+        self.fc2 = nn.Linear(HIDDEN_SIZE, n_actions)
+        init.xavier_normal_(self.fc1.weight)
+        init.xavier_normal_(self.fc2.weight)
 
         self.net = nn.Sequential(
-            nn.Linear(obs_size, HIDDEN_SIZE),
+            self.fc1,
             nn.ReLU(),
             # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
             # nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, n_actions),
+            self.fc2,
             nn.Tanh(),
             # nn.Sigmoid(),
         )
@@ -45,22 +49,30 @@ class CriticNet(nn.Module):
 
     def __init__(self, obs_size: int, n_actions: int, n_agents: int):
         super(CriticNet, self).__init__()
+        self.fc1 = nn.Linear(obs_size * n_agents, HIDDEN_SIZE)
+        self.fc2 = nn.Linear(HIDDEN_SIZE, obs_size * n_agents)
+        self.fc3 = nn.Linear(obs_size * n_agents + n_actions * n_agents, HIDDEN_SIZE)
+        self.fc4 = nn.Linear(HIDDEN_SIZE, 1)
+        init.xavier_normal_(self.fc1.weight)
+        init.xavier_normal_(self.fc2.weight)
+        init.xavier_normal_(self.fc3.weight)
+        init.xavier_normal_(self.fc4.weight)
 
         self.obs_net = nn.Sequential(
-            nn.Linear(obs_size * n_agents, HIDDEN_SIZE),
+            self.fc1,
             nn.ReLU(),
             # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
             # nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, obs_size * n_agents),
+            self.fc2,
             nn.ReLU(),
         )
 
         self.out_net = nn.Sequential(
-            nn.Linear(obs_size * n_agents + n_actions * n_agents, HIDDEN_SIZE),
+            self.fc3,
             nn.ReLU(),
             # nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE),
             # nn.ReLU(),
-            nn.Linear(HIDDEN_SIZE, 1),
+            self.fc4,
         )
 
         self.n_actions = n_actions

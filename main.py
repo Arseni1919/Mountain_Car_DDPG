@@ -9,7 +9,7 @@ from alg_functions import *
 torch.autograd.set_detect_anomaly(True)
 
 plotter = ALGPlotter(plot_life=PLOT_LIVE, plot_neptune=NEPTUNE, name='my_run', tags=[SINGLE_AGENT_ENV_NAME])
-plotter.neptune_set_parameters({f'{BATCH_SIZE}': BATCH_SIZE, f'{LR_CRITIC}': LR_CRITIC, f'{LR_ACTOR}': LR_ACTOR,})
+plotter.neptune_set_parameters()
 env = SingleAgentEnv(env_name=SINGLE_AGENT_ENV_NAME, plotter=plotter)
 
 # --------------------------- # NETS # -------------------------- #
@@ -38,7 +38,7 @@ observation = env.reset()
 
 rewards = 0
 step, episode, p = 0, 0, 0
-while step < N_STEPS and episode < N_EPISODES:
+while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
     # for step in range(N_STEPS):
     print(f'\r(step {step - REPLAY_BUFFER_SIZE})', end='')
     # --------------------------- # STEP # -------------------------- #
@@ -111,20 +111,22 @@ while step < N_STEPS and episode < N_EPISODES:
         soft_update(target_critic, critic, TAU)
         soft_update(target_actor, actor, TAU)
         if step % 100 == 0:
-            print()
-            p = list(actor.parameters())[0][:5, 1].detach().numpy()
-            plotter.info(f'{p}')
-            q = list(target_actor.parameters())[0][:5, 1].detach().numpy()
-            plotter.info(f'{q}')
-            mse = np.square(p - q).mean(axis=0)
+            # print()
+            v1 = list(actor.parameters())[0][:, 1].detach().numpy()
+            # plotter.info(f'{v1}')
+            v2 = list(target_actor.parameters())[0][:, 1].detach().numpy()
+            # plotter.info(f'{v2}')
+            mse = np.square(v1 - v2).mean(axis=0)
             plotter.neptune_plot({'mse': mse})
-            print(mse)
+            # print(mse)
 
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
 
         if step % 10 == 0:
-            plotter.plots_online()
+            # plotter.plots_online()
+            plotter.plot_nn_map(net_actor=actor, net_critic=critic)
+            pass
 
         # ---------------------------------------------------------------- #
     step += 1
