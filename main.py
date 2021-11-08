@@ -122,7 +122,7 @@ while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
         mse_actor = matrix_mse_mats(plotter.matrix_get_prev('actor'), matrix_get(actor))
         plotter.neptune_plot({'mse_actor': mse_actor})
 
-        if step % 100 == 0 and episode > 50:
+        if step % 100 == 0 and episode % 10 == 0:
             # plotter.plots_online()
             # plotter.plot_nn_map(net_actor=actor, net_critic=critic)
             # print(f'mse_critic: {mse_critic}, mse_actor: {mse_actor}')
