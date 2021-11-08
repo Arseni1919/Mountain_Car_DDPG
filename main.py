@@ -123,7 +123,7 @@ while episode < N_EPISODES:  # while step < N_STEPS and episode < N_EPISODES:
         # --------------------------- # PLOTTER # -------------------------- #
         plotter.neptune_plot({'loss_critic': critic_loss.item(), 'loss_actor': actor_loss.item()})
 
-        if step % 10 == 0:
+        if step % 100 == 0:
             # plotter.plots_online()
             plotter.plot_nn_map(net_actor=actor, net_critic=critic)
             pass

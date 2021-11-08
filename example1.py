@@ -221,7 +221,7 @@ def main():
         episode_score += reward
         iteration_now += 1
         iteration += 1
-        if episode % 2 == 0 and episode > 60:
+        if episode % 10 == 0 and episode > 0:
             # env.render()
             if iteration_now % 100 == 0:
                 plotter.plot_nn_map(actor, critic)
@@ -249,5 +249,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    plt.pause(0)
     plotter.close()
+    plt.pause(0)
